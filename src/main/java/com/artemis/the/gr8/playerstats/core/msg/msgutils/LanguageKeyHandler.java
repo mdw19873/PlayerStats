@@ -2,6 +2,7 @@ package com.artemis.the.gr8.playerstats.core.msg.msgutils;
 
 import com.artemis.the.gr8.playerstats.core.Main;
 import com.artemis.the.gr8.playerstats.core.utils.EnumHandler;
+import com.artemis.the.gr8.playerstats.core.utils.MyLogger;
 import com.artemis.the.gr8.playerstats.core.utils.YamlFileHandler;
 import com.artemis.the.gr8.playerstats.api.enums.Unit;
 import org.bukkit.Material;
@@ -175,7 +176,27 @@ public final class LanguageKeyHandler extends YamlFileHandler {
         if (realKey == null) {
             return "";
         }
-        return super.getFileConfiguration().getString(realKey);
+        String translation = super.getFileConfiguration().getString(realKey);
+        if (translation == null) {
+            //This statistic has no entry in language.yml (for example a statistic that
+            //exists in the server's Minecraft version but is newer than this language.yml
+            //file knows about). Fall back to a prettified version of the key so we never
+            //return null, which would throw a NullPointerException during serialization.
+            MyLogger.logWarning("Missing language.yml entry for '" + realKey + "'; using a generated name instead");
+            return StringUtils.prettify(getRawStatName(realKey));
+        }
+        return translation;
+    }
+
+    /**
+     * Extracts the raw statistic name from a full language key by taking the
+     * part after the last "." (so "stat.minecraft.nautilus_one_cm" becomes
+     * "nautilus_one_cm"). Used to build a readable fallback display name for
+     * statistics that are missing from language.yml.
+     */
+    private static @NotNull String getRawStatName(@NotNull String key) {
+        int lastSeparator = key.lastIndexOf('.');
+        return (lastSeparator == -1) ? key : key.substring(lastSeparator + 1);
     }
 
     private static @Nullable String convertToNormalStatKey(String statKey) {

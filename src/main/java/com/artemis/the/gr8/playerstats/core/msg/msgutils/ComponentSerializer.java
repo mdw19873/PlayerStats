@@ -74,7 +74,10 @@ public final class ComponentSerializer {
                                 });
                     }
                     else {
-                        return languageKeyHandler.convertLanguageKeyToDisplayName(trans.key());
+                        String displayName = languageKeyHandler.convertLanguageKeyToDisplayName(trans.key());
+                        //guard against null: the flattener feeds this straight to the legacy
+                        //serializer, which throws a NullPointerException on a null String
+                        return (displayName != null) ? displayName : StringUtils.prettify(trans.key());
                     }
                     return totalPrettyName.toString();
                 })
