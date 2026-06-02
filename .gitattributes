@@ -1,0 +1,48 @@
+# Normalize line endings.
+#
+# `text=auto` lets Git decide which files are text and stores them with LF in
+# the repository. This is the safety net that prevents the CRLF/LF churn seen
+# in generated files on Windows/WSL. Explicit rules below pin the endings for
+# files where consistency matters regardless of the checkout platform.
+* text=auto
+
+#
+# Source and config files — always LF in the working tree
+#
+*.java          text eol=lf
+*.xml           text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+*.json          text eol=lf
+*.properties    text eol=lf
+*.md            text eol=lf
+*.txt           text eol=lf
+*.sh            text eol=lf
+
+# Repo metadata
+.gitattributes  text eol=lf
+.gitignore      text eol=lf
+*.iml           text eol=lf
+
+#
+# Windows-only scripts — must stay CRLF to run correctly
+#
+*.bat           text eol=crlf
+*.cmd           text eol=crlf
+
+#
+# Binary files — never normalize or diff as text
+#
+*.jar           binary
+*.war           binary
+*.ear           binary
+*.nar           binary
+*.class         binary
+*.zip           binary
+*.tar.gz        binary
+*.rar           binary
+*.png           binary
+*.jpg           binary
+*.jpeg          binary
+*.gif           binary
+*.ico           binary
