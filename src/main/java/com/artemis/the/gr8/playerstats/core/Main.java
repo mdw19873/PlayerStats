@@ -18,10 +18,13 @@ import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.java.JavaPluginLoader;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +42,21 @@ public final class Main extends JavaPlugin implements PlayerStats {
 
     private static List<Reloadable> reloadables;
     private static List<Closable> closables;
+
+    /** Default constructor used by the server's normal plugin loading. */
+    public Main() {
+        super();
+    }
+
+    /**
+     * Constructor used by MockBukkit to load the plugin in tests. It simply
+     * delegates to {@link JavaPlugin}'s mock-loading constructor and is never
+     * invoked during normal server operation.
+     */
+    @SuppressWarnings("deprecation")
+    protected Main(JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file) {
+        super(loader, description, dataFolder, file);
+    }
 
     @Override
     public void onEnable() {

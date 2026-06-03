@@ -76,6 +76,17 @@ public final class StatCommand implements CommandExecutor {
         return true;
     }
 
+    /**
+     * Parses the given args into a {@link StatRequest}, or returns null if they
+     * don't form a valid request. Package-private testability seam so the
+     * argument-parsing logic can be exercised without dispatching a full command
+     * (and without running the async stat thread).
+     */
+    @Nullable
+    StatRequest<?> buildStatRequest(CommandSender sender, String[] args) {
+        return new ArgProcessor(sender, args).request;
+    }
+
     private void countStatCommand(@NotNull Target target) {
         switch (target) {
             case PLAYER -> commandCounter.upPlayerStatCommandCount();

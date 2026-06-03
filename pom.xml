@@ -55,6 +55,11 @@
             <id>placeholderapi</id> <!-- Placeholder API -->
             <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
         </repository>
+
+        <repository>
+            <id>papermc</id> <!-- paper-api, pulled in by MockBukkit (test scope) -->
+            <url>https://repo.papermc.io/repository/maven-public/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -140,6 +145,41 @@
             <artifactId>annotations</artifactId>
             <version>24.0.1</version>
         </dependency>
+
+        <!-- ===== Testing ===== -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.11.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>3.26.3</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>5.23.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>5.23.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- MockBukkit: simulated server for integration tests. v1.18 matches the
+             spigot-api compile floor, so there's no org.bukkit version clash on the
+             test classpath. -->
+        <dependency>
+            <groupId>com.github.seeseemelk</groupId>
+            <artifactId>MockBukkit-v1.18</artifactId>
+            <version>2.85.2</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -152,6 +192,41 @@
                     <source>17</source>
                     <target>17</target>
                 </configuration>
+            </plugin>
+            <!-- Runs the JUnit 5 test suite -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.2</version>
+                <configuration>
+                    <!-- Let ByteBuddy (used by Mockito) run on JDK versions it doesn't yet
+                         recognise, instead of failing to resolve the VM class-file version. -->
+                    <systemPropertyVariables>
+                        <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+            <!-- Code-coverage reporting (report-only, no enforced threshold).
+                 Report is written to target/site/jacoco/index.html during the test phase. -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.14</version>
+                <executions>
+                    <execution>
+                        <id>jacoco-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

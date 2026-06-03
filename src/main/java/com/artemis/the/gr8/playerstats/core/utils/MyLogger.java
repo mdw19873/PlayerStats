@@ -21,8 +21,16 @@ public final class MyLogger {
     private static ConcurrentHashMap<String, Integer> threadNames;
 
     static {
-        Plugin plugin = Bukkit.getPluginManager().getPlugin("PlayerStats");
-        logger = (plugin != null) ? plugin.getLogger() : Bukkit.getLogger();
+        Logger resolvedLogger;
+        try {
+            Plugin plugin = Bukkit.getPluginManager().getPlugin("PlayerStats");
+            resolvedLogger = (plugin != null) ? plugin.getLogger() : Bukkit.getLogger();
+        } catch (Throwable t) {
+            //No Bukkit server is available (e.g. during unit tests). Fall back to a
+            //standalone logger so class initialization never fails outside a server.
+            resolvedLogger = Logger.getLogger("PlayerStats");
+        }
+        logger = resolvedLogger;
         debugLevel = DebugLevel.LOW;
         threadNames = new ConcurrentHashMap<>();
     }
