@@ -71,6 +71,12 @@ them intact:
 
 - `MyLogger`'s static initializer falls back to a standalone `Logger` when no
   Bukkit server is present, so utility classes that log can be unit-tested.
+- `Main` has a delegating `(JavaPluginLoader, PluginDescriptionFile, File, File)`
+  constructor that MockBukkit uses to load the plugin; it is never invoked during
+  normal server operation.
+- `StatCommand.buildStatRequest(CommandSender, String[])` is a package-private
+  accessor that exposes the argument parser so command parsing can be tested
+  without dispatching a full command or running the async stat thread.
 - Singletons retain their reset-on-read or reload behaviour that tests rely on
   to avoid cross-test state leakage (e.g. `CommandCounter.getCommandCounts()`
   drains its counters; drain it in `@BeforeEach`).

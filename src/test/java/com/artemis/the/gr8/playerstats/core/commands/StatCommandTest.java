@@ -56,6 +56,20 @@ class StatCommandTest extends MockBukkitTestBase {
             assertThat(request).isNotNull();
             assertThat(request.getSettings().getTarget()).isEqualTo(Target.TOP);
         }
+
+        @Test
+        @DisplayName("a player whose name contains a target keyword is not mistaken for that target")
+        void playerNameContainingKeywordIsNotTreatedAsTarget() {
+            //"serverbob" contains the substring "server"; target detection must match
+            //the whole argument, not a substring, so this stays a PLAYER lookup
+            server.addPlayer("serverbob");
+
+            StatRequest<?> request = parse("jump", "serverbob");
+
+            assertThat(request).isNotNull();
+            assertThat(request.getSettings().getTarget()).isEqualTo(Target.PLAYER);
+            assertThat(request.getSettings().getPlayerName()).isEqualTo("serverbob");
+        }
     }
 
     @Nested

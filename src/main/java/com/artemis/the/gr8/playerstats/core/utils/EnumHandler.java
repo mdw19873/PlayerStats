@@ -8,8 +8,11 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -32,6 +35,11 @@ public final class EnumHandler {
     private static List<String> statNames;
     private static List<String> subStatNames;
 
+    //O(1) membership lookups backing isStatistic()/isSubStatEntry(); the Lists
+    //above are kept for ordered tab-completion suggestions.
+    private static Set<String> statNameSet;
+    private static Set<String> subStatNameSet;
+
     private EnumHandler() {
         prepareLists();
     }
@@ -51,41 +59,41 @@ public final class EnumHandler {
     }
 
     /**
-     * @return a list with blockNames in lowercase
+     * @return an unmodifiable list with blockNames in lowercase
      */
     public List<String> getAllBlockNames() {
-        return blockNames;
+        return Collections.unmodifiableList(blockNames);
     }
 
     /**
-     * @return a list with itemNames in lowercase
+     * @return an unmodifiable list with itemNames in lowercase
      */
     public List<String> getAllItemNames() {
-        return itemNames;
+        return Collections.unmodifiableList(itemNames);
     }
 
     public List<String> getAllItemsThatCanBreak() {
-        return itemsThatCanBreak;
+        return Collections.unmodifiableList(itemsThatCanBreak);
     }
 
     /**
-     * @return a list with entityNames in lowercase
+     * @return an unmodifiable list with entityNames in lowercase
      */
     public List<String> getAllEntityNames() {
-        return entityNames;
+        return Collections.unmodifiableList(entityNames);
     }
 
     public List<String> getAllEntitiesThatCanDie() {
-        return entitiesThatCanDie;
+        return Collections.unmodifiableList(entitiesThatCanDie);
     }
 
     /**
      * Returns all statistic-names in lowercase.
      *
-     * @return the List
+     * @return an unmodifiable List
      */
     public List<String> getAllStatNames() {
-        return statNames;
+        return Collections.unmodifiableList(statNames);
     }
 
     /**
@@ -154,7 +162,7 @@ public final class EnumHandler {
      * @return true if this String is a valid Statistic
      */
     public boolean isStatistic(@NotNull String statName) {
-        return statNames.contains(statName.toLowerCase(Locale.ENGLISH));
+        return statNameSet.contains(statName.toLowerCase(Locale.ENGLISH));
     }
 
     /**
@@ -178,7 +186,7 @@ public final class EnumHandler {
      * of Type.Untyped
      */
     public boolean isSubStatEntry(@NotNull String statName) {
-        return subStatNames.contains(statName.toLowerCase(Locale.ENGLISH));
+        return subStatNameSet.contains(statName.toLowerCase(Locale.ENGLISH));
     }
 
     /**
@@ -243,5 +251,8 @@ public final class EnumHandler {
                 .map(Statistic::toString)
                 .map(string -> string.toLowerCase(Locale.ENGLISH))
                 .collect(Collectors.toList());
+
+        statNameSet = new HashSet<>(statNames);
+        subStatNameSet = new HashSet<>(subStatNames);
     }
 }

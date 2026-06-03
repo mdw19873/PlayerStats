@@ -85,11 +85,14 @@ final class BukkitProcessor extends RequestProcessor {
     }
 
     private long getServerStat(StatRequest.Settings requestSettings) {
-        List<Integer> numbers = getAllStatsAsync(requestSettings)
+        //the values are already computed and in memory; a single sequential sum
+        //avoids allocating an intermediate list and spinning up the common pool
+        //twice (it was already used to gather the stats).
+        return getAllStatsAsync(requestSettings)
                 .values()
-                .parallelStream()
-                .toList();
-        return numbers.parallelStream().mapToLong(Integer::longValue).sum();
+                .stream()
+                .mapToLong(Integer::longValue)
+                .sum();
     }
 
     private LinkedHashMap<String, Integer> getTopStats(StatRequest.Settings requestSettings) {

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisplayName("EnumHandler")
 class EnumHandlerTest extends MockBukkitTestBase {
@@ -41,6 +42,15 @@ class EnumHandlerTest extends MockBukkitTestBase {
             assertThat(enumHandler.isStatistic("jump")).isTrue();
             assertThat(enumHandler.isStatistic("definitely_not_a_stat")).isFalse();
         }
+
+        @Test
+        @DisplayName("the stat-name list cannot be mutated by callers")
+        void statNameListIsUnmodifiable() {
+            //guards against the TabCompleter regression where the shared backing
+            //list was being appended to on every tab-completion of the first arg
+            assertThatThrownBy(() -> enumHandler.getAllStatNames().add("help"))
+                    .isInstanceOf(UnsupportedOperationException.class);
+        }
     }
 
     @Nested
@@ -69,6 +79,11 @@ class EnumHandlerTest extends MockBukkitTestBase {
         void recognisesSubStatEntries() {
             assertThat(enumHandler.isSubStatEntry("diamond")).isTrue();
             assertThat(enumHandler.isSubStatEntry("definitely_not_a_substat")).isFalse();
+        }
+
+        @Test
+        void recognisesSubStatEntriesCaseInsensitively() {
+            assertThat(enumHandler.isSubStatEntry("DIAMOND")).isTrue();
         }
     }
 }

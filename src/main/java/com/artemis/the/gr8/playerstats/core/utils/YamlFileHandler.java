@@ -90,7 +90,7 @@ public abstract class YamlFileHandler implements Reloadable {
         try {
             fileConfiguration.save(file);
         } catch (IOException e) {
-            e.printStackTrace();
+            MyLogger.logException(e, "YamlFileHandler", "save(), saving " + fileName);
         }
     }
 
@@ -103,7 +103,7 @@ public abstract class YamlFileHandler implements Reloadable {
         try {
             ConfigUpdater.update(plugin, fileName, file);
         } catch (IOException e) {
-            e.printStackTrace();
+            MyLogger.logException(e, "YamlFileHandler", "updateFile(), updating " + fileName);
         }
     }
 }

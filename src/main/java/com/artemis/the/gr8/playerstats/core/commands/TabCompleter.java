@@ -105,7 +105,9 @@ public final class TabCompleter implements org.bukkit.command.TabCompleter {
     }
 
     private @NotNull List<String> firstStatCommandArgSuggestions() {
-        List<String> suggestions = enumHandler.getAllStatNames();
+        //copy: getAllStatNames() returns an unmodifiable view of EnumHandler's
+        //shared list, so the help/example aliases must go on a fresh list.
+        List<String> suggestions = new ArrayList<>(enumHandler.getAllStatNames());
         suggestions.add("examples");
         suggestions.add("info");
         suggestions.add("help");

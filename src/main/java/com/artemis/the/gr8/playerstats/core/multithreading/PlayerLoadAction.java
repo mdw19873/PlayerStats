@@ -15,7 +15,7 @@ import java.util.concurrent.RecursiveAction;
  */
 final class PlayerLoadAction extends RecursiveAction {
 
-    private static int threshold;
+    private final int threshold;
 
     private final OfflinePlayer[] players;
     private final int start;
@@ -43,7 +43,7 @@ final class PlayerLoadAction extends RecursiveAction {
         this.end = end;
         this.offlinePlayerUUIDs = offlinePlayerUUIDs;
 
-        MyLogger.subActionCreated(Thread.currentThread().getName());
+        MyLogger.subActionCreated();
     }
 
     @Override
@@ -71,7 +71,7 @@ final class PlayerLoadAction extends RecursiveAction {
         for (int i = start; i < end; i++) {
             OfflinePlayer player = players[i];
             String playerName = player.getName();
-            MyLogger.actionRunning(Thread.currentThread().getName());
+            MyLogger.actionRunning();
             if (playerName != null &&
                     !offlinePlayerHandler.isExcludedPlayer(player.getUniqueId()) &&
                     UnixTimeHandler.hasPlayedSince(lastPlayedLimit, player.getLastPlayed())) {

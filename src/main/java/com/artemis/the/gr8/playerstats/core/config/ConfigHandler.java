@@ -17,6 +17,29 @@ public final class ConfigHandler extends YamlFileHandler {
     private final int configVersion;
     private FileConfiguration config;
 
+    //Cached scalar settings. The underlying FileConfiguration re-parses its map on
+    //every getInt/getBoolean/getString call, so the values that are read per-request
+    //(or per-player) are cached here and refreshed in reload(). Parameterized
+    //color/unit getters are left reading live since they are far less hot and would
+    //need a combinatorial cache.
+    private boolean limitStatRequests;
+    private boolean allowStatSharing;
+    private int statShareWaitingTime;
+    private boolean whitelistOnly;
+    private boolean excludeBanned;
+    private int lastPlayedLimit;
+    private boolean allowPlayerLookupsForExcludedPlayers;
+    private boolean useTranslatableComponents;
+    private boolean useHoverText;
+    private boolean useFestiveFormatting;
+    private boolean useRainbowMode;
+    private boolean useDots;
+    private int topListMaxSize;
+    private String topStatsTitle;
+    private String serverTitle;
+    private String serverName;
+    private int hoverTextAmountLighter;
+
     private ConfigHandler() {
         super("config.yml");
         config = super.getFileConfiguration();
@@ -24,6 +47,7 @@ public final class ConfigHandler extends YamlFileHandler {
         configVersion = 8;
         checkAndUpdateConfigVersion();
         MyLogger.setDebugLevel(getDebugLevel());
+        cacheSettings();
     }
 
     public static ConfigHandler getInstance() {
@@ -45,6 +69,32 @@ public final class ConfigHandler extends YamlFileHandler {
         super.reload();
         config = super.getFileConfiguration();
         MyLogger.setDebugLevel(getDebugLevel());
+        cacheSettings();
+    }
+
+    /**
+     * Reads the frequently-accessed scalar settings from the config into fields,
+     * so the hot paths don't re-parse the YAML map on every call. Called on
+     * construction and after every {@link #reload()}.
+     */
+    private void cacheSettings() {
+        limitStatRequests = config.getBoolean("only-allow-one-lookup-at-a-time-per-player", true);
+        allowStatSharing = config.getBoolean("enable-stat-sharing", true);
+        statShareWaitingTime = config.getInt("waiting-time-before-sharing-again", 0);
+        whitelistOnly = config.getBoolean("include-whitelist-only", false);
+        excludeBanned = config.getBoolean("exclude-banned-players", false);
+        lastPlayedLimit = config.getInt("number-of-days-since-last-joined", 0);
+        allowPlayerLookupsForExcludedPlayers = config.getBoolean("allow-player-lookups-for-excluded-players", true);
+        useTranslatableComponents = config.getBoolean("translate-to-client-language", true);
+        useHoverText = config.getBoolean("enable-hover-text", true);
+        useFestiveFormatting = config.getBoolean("enable-festive-formatting", true);
+        useRainbowMode = config.getBoolean("rainbow-mode", false);
+        useDots = config.getBoolean("use-dots", true);
+        topListMaxSize = config.getInt("top-list-max-size", 10);
+        topStatsTitle = config.getString("top-list-title", "Top");
+        serverTitle = config.getString("total-server-stat-title", "Total on");
+        serverName = config.getString("your-server-name", "this server");
+        hoverTextAmountLighter = config.getInt("hover-text-amount-lighter", 20);
     }
 
     /**
@@ -91,7 +141,7 @@ public final class ConfigHandler extends YamlFileHandler {
      * @return the config setting (default: true)
      */
     public boolean limitStatRequests() {
-        return config.getBoolean("only-allow-one-lookup-at-a-time-per-player", true);
+        return limitStatRequests;
     }
 
     /**
@@ -99,7 +149,7 @@ public final class ConfigHandler extends YamlFileHandler {
      * @return the config setting (default: true)
      */
     public boolean allowStatSharing() {
-        return config.getBoolean("enable-stat-sharing", true);
+        return allowStatSharing;
     }
 
     /**
@@ -108,7 +158,7 @@ public final class ConfigHandler extends YamlFileHandler {
      * @return the number (default: 0)
      */
     public int getStatShareWaitingTime() {
-        return config.getInt("waiting-time-before-sharing-again", 0);
+        return statShareWaitingTime;
     }
 
     /**
@@ -116,7 +166,7 @@ public final class ConfigHandler extends YamlFileHandler {
      * @return the config setting (default: true)
      */
     public boolean whitelistOnly() {
-        return config.getBoolean("include-whitelist-only", false);
+        return whitelistOnly;
     }
 
     /**
@@ -124,7 +174,7 @@ public final class ConfigHandler extends YamlFileHandler {
      * @return the config setting for exclude-banned-players (default: false)
      */
     public boolean excludeBanned() {
-        return config.getBoolean("exclude-banned-players", false);
+        return excludeBanned;
     }
 
     /**
@@ -132,7 +182,7 @@ public final class ConfigHandler extends YamlFileHandler {
      * @return the number (default: 0 - which signals not to use this limit)
      */
     public int getLastPlayedLimit() {
-        return config.getInt("number-of-days-since-last-joined", 0);
+        return lastPlayedLimit;
     }
 
     /**
@@ -140,7 +190,7 @@ public final class ConfigHandler extends YamlFileHandler {
      * @return the config setting (default: true)
      */
     public boolean allowPlayerLookupsForExcludedPlayers() {
-        return config.getBoolean("allow-player-lookups-for-excluded-players", true);
+        return allowPlayerLookupsForExcludedPlayers;
     }
 
     /**
@@ -150,7 +200,7 @@ public final class ConfigHandler extends YamlFileHandler {
      * @implNote Currently supported: statistic, block, item and entity names.
      */
     public boolean useTranslatableComponents() {
-        return config.getBoolean("translate-to-client-language", true);
+        return useTranslatableComponents;
     }
 
     /**
@@ -158,7 +208,7 @@ public final class ConfigHandler extends YamlFileHandler {
      * @return the config setting (default: true)
      */
     public boolean useHoverText() {
-        return config.getBoolean("enable-hover-text", true);
+        return useHoverText;
     }
 
     /**
@@ -166,7 +216,7 @@ public final class ConfigHandler extends YamlFileHandler {
      * @return the config setting (default: true)
       */
     public boolean useFestiveFormatting() {
-        return config.getBoolean("enable-festive-formatting", true);
+        return useFestiveFormatting;
     }
 
     /**
@@ -175,7 +225,7 @@ public final class ConfigHandler extends YamlFileHandler {
      * @return the config setting (default: false)
      */
     public boolean useRainbowMode() {
-        return config.getBoolean("rainbow-mode", false);
+        return useRainbowMode;
     }
 
     /**
@@ -207,7 +257,7 @@ public final class ConfigHandler extends YamlFileHandler {
      * @return the config setting (default: true)
      */
     public boolean useDots() {
-        return config.getBoolean("use-dots", true);
+        return useDots;
     }
 
     /**
@@ -215,7 +265,7 @@ public final class ConfigHandler extends YamlFileHandler {
      * @return the config setting (default: 10)
      */
     public int getTopListMaxSize() {
-        return config.getInt("top-list-max-size", 10);
+        return topListMaxSize;
     }
 
     /**
@@ -224,7 +274,7 @@ public final class ConfigHandler extends YamlFileHandler {
      * (default: "Top")
      */
     public String getTopStatsTitle() {
-        return config.getString("top-list-title", "Top");
+        return topStatsTitle;
     }
 
     /**
@@ -232,7 +282,7 @@ public final class ConfigHandler extends YamlFileHandler {
      * @return the title (default: "Total on")
      */
     public String getServerTitle() {
-        return config.getString("total-server-stat-title", "Total on");
+        return serverTitle;
     }
 
     /**
@@ -240,7 +290,7 @@ public final class ConfigHandler extends YamlFileHandler {
      * @return the title (default: "this server")
      */
     public String getServerName() {
-        return config.getString("your-server-name", "this server");
+        return serverName;
     }
 
     /**
@@ -335,7 +385,7 @@ public final class ConfigHandler extends YamlFileHandler {
      * @return an {@code int} that represents a percentage (default: 20)
      */
     public int getHoverTextAmountLighter() {
-        return config.getInt("hover-text-amount-lighter", 20);
+        return hoverTextAmountLighter;
     }
 
     /**

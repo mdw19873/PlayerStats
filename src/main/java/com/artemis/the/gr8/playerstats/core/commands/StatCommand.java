@@ -196,7 +196,8 @@ public final class StatCommand implements CommandExecutor {
             String targetArg = null;
             for (String arg : argsToProcess) {
                 Matcher matcher = pattern.matcher(arg);
-                if (matcher.find()) {
+                if (matcher.matches()) {  //matches() requires the whole arg to be a keyword,
+                                          //so a player named e.g. "serverbob" is not read as "server"
                     targetArg = matcher.group();
                     switch (targetArg) {
                         case "me" -> {

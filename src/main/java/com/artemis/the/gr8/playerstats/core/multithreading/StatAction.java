@@ -15,7 +15,7 @@ import java.util.concurrent.RecursiveTask;
  */
 final class StatAction extends RecursiveTask<ConcurrentHashMap<String, Integer>> {
 
-    private static int threshold;
+    private final int threshold;
     private final ImmutableList<String> playerNames;
     private final StatRequest.Settings requestSettings;
     private final ConcurrentHashMap<String, Integer> allStats;
@@ -37,7 +37,7 @@ final class StatAction extends RecursiveTask<ConcurrentHashMap<String, Integer>>
         this.requestSettings = requestSettings;
         this.allStats = allStats;
 
-        MyLogger.subActionCreated(Thread.currentThread().getName());
+        MyLogger.subActionCreated();
     }
 
     @Override
@@ -63,7 +63,7 @@ final class StatAction extends RecursiveTask<ConcurrentHashMap<String, Integer>>
         if (iterator.hasNext()) {
             do {
                 String playerName = iterator.next();
-                MyLogger.actionRunning(Thread.currentThread().getName());
+                MyLogger.actionRunning();
                 OfflinePlayer player = offlinePlayerHandler.getIncludedOfflinePlayer(playerName);
                 int statistic = 0;
                 switch (requestSettings.getStatistic().getType()) {

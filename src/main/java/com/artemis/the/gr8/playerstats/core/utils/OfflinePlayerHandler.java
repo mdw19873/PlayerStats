@@ -19,12 +19,25 @@ import java.util.function.Predicate;
  * calculations, and can retrieve the corresponding OfflinePlayer
  * object for a given player-name.
  */
-public final class OfflinePlayerHandler extends YamlFileHandler {
+public final class OfflinePlayerHandler extends YamlFileHandler implements Closable {
 
     private static volatile OfflinePlayerHandler instance;
     private final ConfigHandler config;
+
+    //a single reusable background thread for (re)loading the offline-player list,
+    //rather than spinning up and tearing down an ExecutorService on every reload.
+    //Daemon so it never keeps the JVM alive; shut down in close() on plugin disable.
+    private final ExecutorService loadExecutor = Executors.newSingleThreadExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "PlayerStats-OfflinePlayerLoader");
+        thread.setDaemon(true);
+        return thread;
+    });
     private static ConcurrentHashMap<String, UUID> includedPlayerUUIDs;
     private static ConcurrentHashMap<String, UUID> excludedPlayerUUIDs;
+    //mirrors the values of excludedPlayerUUIDs so isExcludedPlayer(UUID) is O(1)
+    //instead of an O(n) ConcurrentHashMap.containsValue scan (hit once per player
+    //on every reload, see PlayerLoadAction).
+    private static Set<UUID> excludedPlayerUUIDSet;
 
     private OfflinePlayerHandler() {
         super("excluded_players.yml");
@@ -32,6 +45,7 @@ public final class OfflinePlayerHandler extends YamlFileHandler {
 
         loadOfflinePlayers();
         Main.registerReloadable(this);
+        Main.registerClosable(this);
     }
 
     public static OfflinePlayerHandler getInstance() {
@@ -70,7 +84,7 @@ public final class OfflinePlayerHandler extends YamlFileHandler {
     }
 
     public boolean isExcludedPlayer(UUID uniqueID) {
-        return excludedPlayerUUIDs.containsValue(uniqueID);
+        return excludedPlayerUUIDSet.contains(uniqueID);
     }
 
     public boolean addPlayerToExcludeList(String playerName) {
@@ -80,6 +94,7 @@ public final class OfflinePlayerHandler extends YamlFileHandler {
             super.writeEntryToList("excluded", uuid.toString());
             includedPlayerUUIDs.remove(playerName);
             excludedPlayerUUIDs.put(playerName, uuid);
+            excludedPlayerUUIDSet.add(uuid);
             return true;
         }
         return false;
@@ -91,6 +106,7 @@ public final class OfflinePlayerHandler extends YamlFileHandler {
 
             super.removeEntryFromList("excluded", uuid.toString());
             excludedPlayerUUIDs.remove(playerName);
+            excludedPlayerUUIDSet.remove(uuid);
             includedPlayerUUIDs.put(playerName, uuid);
             return true;
         }
@@ -103,7 +119,7 @@ public final class OfflinePlayerHandler extends YamlFileHandler {
 
     @Contract(" -> new")
     public @NotNull ArrayList<String> getExcludedPlayerNames() {
-        return Collections.list(excludedPlayerUUIDs.keys());
+        return new ArrayList<>(excludedPlayerUUIDs.keySet());
     }
 
     /**
@@ -114,7 +130,7 @@ public final class OfflinePlayerHandler extends YamlFileHandler {
      */
     @Contract(" -> new")
     public @NotNull ArrayList<String> getIncludedOfflinePlayerNames() {
-        return Collections.list(includedPlayerUUIDs.keys());
+        return new ArrayList<>(includedPlayerUUIDs.keySet());
     }
 
     /**
@@ -137,8 +153,9 @@ public final class OfflinePlayerHandler extends YamlFileHandler {
      * of players that should be included in statistic calculations
      */
     public @NotNull OfflinePlayer getIncludedOfflinePlayer(String playerName) throws IllegalArgumentException {
-        if (includedPlayerUUIDs.get(playerName) != null) {
-            return Bukkit.getOfflinePlayer(includedPlayerUUIDs.get(playerName));
+        UUID uuid = includedPlayerUUIDs.get(playerName);
+        if (uuid != null) {
+            return Bukkit.getOfflinePlayer(uuid);
         }
         else {
             MyLogger.logWarning("Cannot calculate statistics for player-name: " + playerName +
@@ -149,19 +166,23 @@ public final class OfflinePlayerHandler extends YamlFileHandler {
     }
 
     public @NotNull OfflinePlayer getExcludedOfflinePlayer(String playerName) throws IllegalArgumentException {
-        if (excludedPlayerUUIDs.get(playerName) != null) {
-            return Bukkit.getOfflinePlayer(excludedPlayerUUIDs.get(playerName));
+        UUID uuid = excludedPlayerUUIDs.get(playerName);
+        if (uuid != null) {
+            return Bukkit.getOfflinePlayer(uuid);
         }
         throw new IllegalArgumentException("There is no player on the exclude-list with this name");
     }
 
     private void loadOfflinePlayers() {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(() -> {
+        loadExecutor.execute(() -> {
             loadExcludedPlayerNames();
             loadIncludedOfflinePlayers();
         });
-        executor.shutdown();
+    }
+
+    @Override
+    public void close() {
+        loadExecutor.shutdown();
     }
 
     private void loadIncludedOfflinePlayers() {
@@ -189,11 +210,13 @@ public final class OfflinePlayerHandler extends YamlFileHandler {
         long time = System.currentTimeMillis();
 
         excludedPlayerUUIDs = new ConcurrentHashMap<>();
+        excludedPlayerUUIDSet = ConcurrentHashMap.newKeySet();
         List<String> excluded = super.getFileConfiguration().getStringList("excluded");
         excluded.stream()
                 .filter(Objects::nonNull)
                 .map(UUID::fromString)
                         .forEach(uuid -> {
+                            excludedPlayerUUIDSet.add(uuid);
                             OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
                             String playerName = player.getName();
                             if (playerName != null) {

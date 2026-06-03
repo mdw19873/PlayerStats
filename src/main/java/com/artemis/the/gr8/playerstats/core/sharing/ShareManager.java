@@ -10,7 +10,7 @@ import org.bukkit.command.ConsoleCommandSender;
 
 import javax.annotation.Nullable;
 import java.time.Instant;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -129,11 +129,10 @@ public final class ShareManager implements Reloadable {
                         "creating a new internal queue with the most recent 50 share-code-values and discarding the rest...");
                 ArrayBlockingQueue<Integer> newQueue = new ArrayBlockingQueue<>(500);
 
-                synchronized (this) {  //put the last 50 values in the new Queue
-                    Integer[] lastValues = sharedResults.toArray(new Integer[500]);
-                    Arrays.stream(Arrays.copyOfRange(lastValues, 450, 500))
-                            .parallel().iterator()
-                            .forEachRemaining(newQueue::offer);
+                synchronized (this) {  //keep the most recent 50 share-codes in the new Queue
+                    List<Integer> ordered = new ArrayList<>(sharedResults);  //head (oldest) -> tail (newest)
+                    int from = Math.max(0, ordered.size() - 50);
+                    ordered.subList(from, ordered.size()).forEach(newQueue::offer);
 
                     sharedResults = newQueue;
                 }
@@ -152,13 +151,13 @@ public final class ShareManager implements Reloadable {
      */
     private void removeExcessResults(String playerName) {
         List<StoredResult> alreadySavedResults = statResultQueue.values()
-                .parallelStream()
+                .stream()
                 .filter(result -> result.executorName().equalsIgnoreCase(playerName))
                 .toList();
 
         if (alreadySavedResults.size() > 25) {
             int hashCode = alreadySavedResults
-                    .parallelStream()
+                    .stream()
                     .min(Comparator.comparing(StoredResult::ID))
                     .orElseThrow().hashCode();
             MyLogger.logMediumLevelMsg("Removing old stat no. " + statResultQueue.get(hashCode).ID() + " for player " + playerName);

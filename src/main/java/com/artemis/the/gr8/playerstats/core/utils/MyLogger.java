@@ -6,7 +6,6 @@ import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 
@@ -125,27 +124,27 @@ public final class MyLogger {
      * Internally save the name of the executing thread for later
      * logging of this action. The list of names is reset upon the
      * start of every new action.
-     *
-     * @param threadName Name of the executing thread
      */
-    public static void subActionCreated(String threadName) {
+    public static void subActionCreated() {
         if (debugLevel == DebugLevel.HIGH) {
-            if (!threadNames.containsKey(threadName)) {
-                threadNames.put(threadName, threadNames.size());
-            }
+            recordThreadName(Thread.currentThread().getName());
         }
     }
 
     /**
      * Internally save the name of the executing thread for logging.
-     *
-     * @param threadName Name of the executing thread
+     * Resolves the thread name lazily so the hot fork/join loops pay
+     * nothing for this call at the default (LOW) debug level.
      */
-    public static void actionRunning(String threadName) {
+    public static void actionRunning() {
         if (debugLevel != DebugLevel.LOW) {
-            if (!threadNames.containsKey(threadName)) {
-                threadNames.put(threadName, threadNames.size());
-            }
+            recordThreadName(Thread.currentThread().getName());
+        }
+    }
+
+    private static void recordThreadName(String threadName) {
+        if (!threadNames.containsKey(threadName)) {
+            threadNames.put(threadName, threadNames.size());
         }
     }
 
@@ -160,7 +159,7 @@ public final class MyLogger {
                     threadNames.size() + " Threads were used");
         }
         if (debugLevel == DebugLevel.HIGH) {
-            logger.info(Collections.list(threadNames.keys()).toString());
+            logger.info(threadNames.keySet().toString());
         }
     }
 
