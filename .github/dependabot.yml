@@ -38,6 +38,12 @@ updates:
       # compiles against it so the compiler blocks newer-than-1.18 API usage, and
       # runs forward to current versions via dynamic enum lookup. Do not auto-bump.
       - dependency-name: "org.spigotmc:spigot-api"
+      # Core Adventure must track adventure-platform-bukkit, which is a 4.x library
+      # that defines the supported Minecraft range. Bumping adventure-api/minimessage
+      # to 5.x while the platform stays on 4.x breaks the build (the 5.x core types
+      # can't be resolved against the 4.x platform), so block Adventure major bumps.
+      - dependency-name: "net.kyori:adventure-*"
+        update-types: ["version-update:semver-major"]
 
   # ----- GitHub Actions (.github/workflows) -----
   - package-ecosystem: github-actions
