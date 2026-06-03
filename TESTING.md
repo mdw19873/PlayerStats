@@ -58,7 +58,16 @@ statics, so tests fall into three tiers:
 3. **Server-backed** — needs a simulated server. Use MockBukkit: load the plugin
    with `MockBukkit.load(Main.class)` in `@BeforeEach` and `MockBukkit.unmock()`
    in `@AfterEach` (see `MockBukkitTestBase`). Used for the singleton managers
-   (`EnumHandler`, `LanguageKeyHandler`) and command parsing (`StatCommand`).
+   (`EnumHandler`, `LanguageKeyHandler`, `OfflinePlayerHandler`, `ConfigHandler`)
+   and the commands (`StatCommand`, `TabCompleter`):
+
+   - `OfflinePlayerHandlerTest` drives the include/exclude bookkeeping (it adds a
+     MockBukkit player, then excludes/re-includes it) and asserts the UUID-keyed
+     `isExcludedPlayer(UUID)` lookup stays in sync.
+   - `ConfigHandlerTest` writes a value into the on-disk `config.yml` and reloads,
+     verifying that `reload()` refreshes the cached scalar settings.
+   - `TabCompleterTest` checks the first-argument suggestions and guards the
+     regression where tab-completion mutated `EnumHandler`'s shared stat-name list.
 
    `StatActionTest` is the exception: rather than a full server, it stubs the
    `OfflinePlayerHandler` singleton with Mockito (see the note below) because the
