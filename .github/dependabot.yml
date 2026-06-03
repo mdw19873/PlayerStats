@@ -1,0 +1,60 @@
+version: 2
+
+updates:
+  # ----- Maven dependencies (pom.xml) -----
+  - package-ecosystem: maven
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: "America/Chicago"
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - java
+    commit-message:
+      prefix: build
+    # Group related updates into a single PR to cut down on noise.
+    groups:
+      # Adventure artifacts must move in lockstep.
+      adventure:
+        patterns:
+          - "net.kyori:*"
+      # Test and coverage tooling: batch the routine minor/patch bumps;
+      # majors still open individually so they get a closer look.
+      test-and-coverage:
+        patterns:
+          - "org.junit.jupiter:*"
+          - "org.assertj:*"
+          - "org.mockito:*"
+          - "com.github.seeseemelk:*"   # MockBukkit
+          - "org.jacoco:*"
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # spigot-api is intentionally pinned to the 1.18 support floor: the plugin
+      # compiles against it so the compiler blocks newer-than-1.18 API usage, and
+      # runs forward to current versions via dynamic enum lookup. Do not auto-bump.
+      - dependency-name: "org.spigotmc:spigot-api"
+
+  # ----- GitHub Actions (.github/workflows) -----
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: "America/Chicago"
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - github-actions
+    commit-message:
+      prefix: ci
+    # One PR for all action bumps.
+    groups:
+      github-actions:
+        patterns:
+          - "*"
