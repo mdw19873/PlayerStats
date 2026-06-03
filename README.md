@@ -5,13 +5,20 @@
 
 ## About
 PlayerStats is a Minecraft server plugin that adds a command to view player statistics in 
-top-10 format or individually. Currently tested on all versions between **1.16.5** and **1.21.8** on platforms:
-- Bukkit
-- Spigot
-- Paper
-- Purpur
+top-10 format or individually. It supports Minecraft **1.18** and up — the upper version 
+depends on your server platform:
 
-(It's possible PlayerStats works on other platforms too, but these are the ones I have explicitly tested.)
+| Platform | Supported Minecraft versions |
+| --- | --- |
+| Paper / Purpur | 1.18 – 26.1 |
+| Spigot / Bukkit | 1.18 – 1.21.5 |
+
+The Spigot/Bukkit ceiling comes from the chat-output library 
+([adventure-platform-bukkit](https://github.com/KyoriPowered/adventure-platform)), which currently 
+supports Minecraft up to 1.21.5. Paper and Purpur reach newer versions because PlayerStats uses 
+their built-in chat (Adventure) support instead.
+
+(It's possible PlayerStats works on other platforms too, but these are the ones that have been explicitly tested.)
 
 &nbsp;
 
