@@ -61,15 +61,23 @@ class NumberFormatterTest {
     class DamageNumber {
 
         @Test
-        void halvesAndRoundsForHearts() {
-            //damage stats are stored in half-hearts; HEART converts to whole hearts
-            assertThat(formatter.formatDamageNumber(10, Unit.HEART)).isEqualTo("5");
-            assertThat(formatter.formatDamageNumber(11, Unit.HEART)).isEqualTo("6"); //round(5.5)
+        void convertsTenthsOfHpToRoundedHearts() {
+            //damage stats are stored in tenths of 1 HP, and 1 heart = 2 HP
+            assertThat(formatter.formatDamageNumber(200, Unit.HEART)).isEqualTo("10");
+            assertThat(formatter.formatDamageNumber(210, Unit.HEART)).isEqualTo("11"); //round(10.5)
+            assertThat(formatter.formatDamageNumber(4_200, Unit.HEART)).isEqualTo("210");
         }
 
         @Test
-        void leavesValueUnchangedForHp() {
-            assertThat(formatter.formatDamageNumber(10, Unit.HP)).isEqualTo("10");
+        void convertsTenthsOfHpToRoundedHp() {
+            assertThat(formatter.formatDamageNumber(100, Unit.HP)).isEqualTo("10");
+            assertThat(formatter.formatDamageNumber(105, Unit.HP)).isEqualTo("11"); //round(10.5)
+            assertThat(formatter.formatDamageNumber(4_200, Unit.HP)).isEqualTo("420");
+        }
+
+        @Test
+        void leavesValueUnchangedForNonDamageUnits() {
+            assertThat(formatter.formatDamageNumber(4_200, Unit.NUMBER)).isEqualTo("4,200");
         }
     }
 

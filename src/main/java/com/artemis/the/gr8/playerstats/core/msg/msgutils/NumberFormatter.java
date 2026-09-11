@@ -31,15 +31,22 @@ public final class NumberFormatter implements StatNumberFormatter {
     }
 
     /**
-     * The unit of damage-based statistics is half a heart by default.
-     * This method turns the number into hearts.
+     * The unit of damage-based statistics is a tenth of 1 HP by default
+     * (and 1 HP is half a heart). This method turns the number into
+     * HP or hearts, depending on the config settings.
      */
     @Override
     public @NotNull String formatDamageNumber(long number, @NotNull Unit statUnit) {  //7 statistics
-        if (statUnit == Unit.HEART) {
-            return format.format(Math.round(number / 2.0));
-        } else {
-            return format.format(number);
+        switch (statUnit) {
+            case HEART -> {
+                return format.format(Math.round(number / 20.0));  //divide by 10 to get HP, divide by 2 to get hearts
+            }
+            case HP -> {
+                return format.format(Math.round(number / 10.0));
+            }
+            default -> {
+                return format.format(number);
+            }
         }
     }
 

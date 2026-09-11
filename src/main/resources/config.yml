@@ -88,7 +88,7 @@ your-server-name: 'this server'
 distance-unit: blocks
 distance-unit-for-hover-text: km
 
-# Minecraft measures damage in 0.5 hearts (1HP). PlayerStats supports: hp, hearts
+# Minecraft measures damage in tenths of 1HP (1HP is half a heart). PlayerStats supports: hp, hearts
 damage-unit: hearts
 damage-unit-for-hover-text: hp
 
