@@ -10,13 +10,15 @@ depends on your server platform:
 
 | Platform | Supported Minecraft versions |
 | --- | --- |
-| Paper / Purpur | 1.18 – 26.1 |
+| Paper / Purpur | 1.18 – 26.2 |
 | Spigot / Bukkit | 1.18 – 1.21.5 |
 
 The Spigot/Bukkit ceiling comes from the chat-output library 
-([adventure-platform-bukkit](https://github.com/KyoriPowered/adventure-platform)), which currently 
-supports Minecraft up to 1.21.5. Paper and Purpur reach newer versions because PlayerStats uses 
-their built-in chat (Adventure) support instead.
+([adventure-platform-bukkit](https://github.com/PaperMC/adventure-platform)), which currently 
+supports Minecraft up to 1.21.5. On Paper and Purpur, that same library still delivers the chat 
+messages, but it does so through the server's internal Minecraft classes rather than through Paper's 
+built-in chat (Adventure) support. That route keeps working on newer Paper versions (verified on 
+Paper 26.2), which is why the Paper/Purpur range is wider.
 
 (It's possible PlayerStats works on other platforms too, but these are the ones that have been explicitly tested.)
 
